@@ -219,3 +219,7 @@ canvas#chart{width:100%;height:170px;display:block}
 .pt{font:600 12px Figtree,system-ui,sans-serif;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap}
 .pt[aria-pressed="true"]{background:rgba(95,208,194,.22);color:#fff;border-color:var(--sea)}
 @media (max-width:760px){.legend-bar .pt{display:none}}
+/* readable layer names on the light map */
+body:not(.dark-map) .layers button,body:not(.dark-map) .layers .style-toggle{color:#10202c!important;text-shadow:0 0 3px #fff,0 0 6px #fff}
+body:not(.dark-map) .layers button span{text-shadow:0 0 3px #fff,0 0 6px #fff,0 1px 4px #fff}
+body:not(.dark-map) .layers button.on span{color:#06231f;text-shadow:none}
