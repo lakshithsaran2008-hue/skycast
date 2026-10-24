@@ -63,12 +63,12 @@ const WM = (function () {
   /* Windy-style palettes */
   const WX_WIND = [[0, [72, 98, 186]], [8, [62, 140, 205]], [18, [66, 184, 166]], [28, [140, 208, 90]], [40, [240, 214, 62]], [55, [242, 146, 52]], [72, [228, 68, 62]], [95, [176, 48, 150]]];
   const WX_TEMP = [[-20, [128, 62, 190]], [-10, [100, 112, 224]], [0, [70, 160, 240]], [10, [88, 208, 204]], [18, [138, 220, 104]], [25, [250, 230, 80]], [31, [250, 168, 58]], [38, [236, 82, 58]], [48, [160, 30, 62]]];
-  const WX_RAIN = [[0, [150, 200, 255]], [1, [70, 150, 255]], [3, [40, 200, 120]], [8, [250, 220, 60]], [20, [240, 100, 50]], [40, [200, 40, 160]]];
+  const WX_RAIN = [[0, [130, 200, 255]], [1.5, [70, 140, 255]], [3, [50, 205, 130]], [7, [250, 226, 60]], [12, [246, 130, 50]], [20, [224, 50, 90]], [30, [190, 40, 190]]];
   const LAYERS = {
     wind:     { label: 'Wind', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.speed, fmt: (v) => fmtW(v) },
     gusts:    { label: 'Gusts', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.gust, fmt: (v) => fmtW(v) },
     temp:     { label: 'Temperature', stops: WX_TEMP, lo: -20, hi: 48, a: () => 0.58, val: (s) => s.temp, fmt: (v) => fmtT(v) },
-    rain:     { label: 'Rain', stops: WX_RAIN, lo: 0, hi: 40, a: (v) => (v < 0.1 ? 0 : Math.min(0.85, 0.35 + v / 6)), val: (s) => s.rain, fmt: (v) => v.toFixed(1) + ' mm/h' },
+    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, a: (v) => (v < 0.1 ? 0 : Math.min(0.9, 0.5 + v / 3)), val: (s) => s.rain, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/h' },
     cloud:    { label: 'Clouds', stops: [[0, [255, 255, 255]], [100, [255, 255, 255]]], legend: [[0, [40, 52, 62]], [100, [255, 255, 255]]], lo: 0, hi: 100, a: (v) => 0.75 * Math.pow(v / 100, 1.3), val: (s) => s.cloud, fmt: (v) => Math.round(v) + '%' },
     pressure: { label: 'Pressure', stops: PRESS_STOPS, lo: 980, hi: 1040, a: () => 0.5, val: (s) => s.pres, fmt: (v) => Math.round(v) + ' hPa' },
     humidity: { label: 'Humidity', stops: HUM_STOPS, lo: 0, hi: 100, a: () => 0.5, val: (s) => s.hum, fmt: (v) => Math.round(v) + '%' },
@@ -81,6 +81,8 @@ const WM = (function () {
   };
   const extra = {};
   const WIND_LAYERS = ['wind', 'gusts'];
+  let particlesOn = true;
+  try { particlesOn = localStorage.getItem('sc_particles') !== '0'; } catch (e) {}
 
   /* [name, lat, lon, minimum zoom] */
   const CITIES = [
@@ -346,7 +348,7 @@ const WM = (function () {
   }
   function frame() {
     requestAnimationFrame(frame);
-    const on = !reduced && !moving && U && WIND_LAYERS.includes(state.layer) && !document.hidden;
+    const on = !reduced && !moving && U && particlesOn && !EXTRA[state.layer] && !document.hidden;
     if (!on) return;
     const dark = document.body.classList.contains('dark-map');
     wctx.globalCompositeOperation = 'destination-out';
@@ -521,6 +523,8 @@ const WM = (function () {
 
   function init() {
     setup();
+    const pt = $('#pt-toggle');
+    if (pt) { pt.setAttribute('aria-pressed', String(particlesOn)); pt.addEventListener('click', () => { particlesOn = !particlesOn; try { localStorage.setItem('sc_particles', particlesOn ? '1' : '0'); } catch (e) {} pt.setAttribute('aria-pressed', String(particlesOn)); if (!particlesOn) wctx.clearRect(0, 0, W, H); redraw(); }); }
     map.on('movestart', () => { moving = true; });
     window.addEventListener('resize', () => setTimeout(fitDays, 150));
     map.on('zoomstart', () => { heatC.style.opacity = 0; windC.style.opacity = 0; lblC.style.opacity = 0; geoC.style.opacity = 0; });
