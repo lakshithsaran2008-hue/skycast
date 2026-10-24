@@ -63,12 +63,12 @@ const WM = (function () {
   /* Windy-style palettes */
   const WX_WIND = [[0, [72, 98, 186]], [8, [62, 140, 205]], [18, [66, 184, 166]], [28, [140, 208, 90]], [40, [240, 214, 62]], [55, [242, 146, 52]], [72, [228, 68, 62]], [95, [176, 48, 150]]];
   const WX_TEMP = [[-20, [128, 62, 190]], [-10, [100, 112, 224]], [0, [70, 160, 240]], [10, [88, 208, 204]], [18, [138, 220, 104]], [25, [250, 230, 80]], [31, [250, 168, 58]], [38, [236, 82, 58]], [48, [160, 30, 62]]];
-  const WX_RAIN = [[0, [44, 92, 184]], [1.5, [56, 128, 226]], [2, [58, 168, 214]], [3, [92, 202, 96]], [7, [236, 226, 52]], [10, [246, 150, 42]], [20, [230, 52, 62]], [30, [204, 44, 184]]];
+  const WX_RAIN = [[0, [30, 82, 200]], [1.5, [38, 118, 238]], [2, [44, 164, 232]], [3, [66, 208, 108]], [7, [240, 228, 44]], [10, [250, 148, 36]], [20, [232, 46, 60]], [30, [208, 40, 190]]];
   const LAYERS = {
     wind:     { label: 'Wind', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.speed, fmt: (v) => fmtW(v) },
     gusts:    { label: 'Gusts', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.gust, fmt: (v) => fmtW(v) },
     temp:     { label: 'Temperature', stops: WX_TEMP, lo: -20, hi: 48, a: () => 0.58, val: (s) => s.temp, fmt: (v) => fmtT(v) },
-    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, even: true, a: (v) => (v < 0.1 ? 0 : Math.min(0.94, 0.55 + v / 4)), val: (s) => s.rain, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/h' },
+    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, even: true, a: (v) => (v < 0.05 ? 0 : Math.min(0.95, 0.3 + v * 0.75)), val: (s) => s.rain, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/h' },
     cloud:    { label: 'Clouds', stops: [[0, [255, 255, 255]], [100, [255, 255, 255]]], legend: [[0, [40, 52, 62]], [100, [255, 255, 255]]], lo: 0, hi: 100, a: (v) => 0.75 * Math.pow(v / 100, 1.3), val: (s) => s.cloud, fmt: (v) => Math.round(v) + '%' },
     pressure: { label: 'Pressure', stops: PRESS_STOPS, lo: 980, hi: 1040, a: () => 0.5, val: (s) => s.pres, fmt: (v) => Math.round(v) + ' hPa' },
     humidity: { label: 'Humidity', stops: HUM_STOPS, lo: 0, hi: 100, a: () => 0.5, val: (s) => s.hum, fmt: (v) => Math.round(v) + '%' },
