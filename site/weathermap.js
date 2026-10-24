@@ -63,12 +63,12 @@ const WM = (function () {
   /* Windy-style palettes */
   const WX_WIND = [[0, [72, 98, 186]], [8, [62, 140, 205]], [18, [66, 184, 166]], [28, [140, 208, 90]], [40, [240, 214, 62]], [55, [242, 146, 52]], [72, [228, 68, 62]], [95, [176, 48, 150]]];
   const WX_TEMP = [[-20, [128, 62, 190]], [-10, [100, 112, 224]], [0, [70, 160, 240]], [10, [88, 208, 204]], [18, [138, 220, 104]], [25, [250, 230, 80]], [31, [250, 168, 58]], [38, [236, 82, 58]], [48, [160, 30, 62]]];
-  const WX_RAIN = [[0, [130, 200, 255]], [1.5, [70, 140, 255]], [3, [50, 205, 130]], [7, [250, 226, 60]], [12, [246, 130, 50]], [20, [224, 50, 90]], [30, [190, 40, 190]]];
+  const WX_RAIN = [[0, [44, 92, 184]], [1.5, [56, 128, 226]], [2, [58, 168, 214]], [3, [92, 202, 96]], [7, [236, 226, 52]], [10, [246, 150, 42]], [20, [230, 52, 62]], [30, [204, 44, 184]]];
   const LAYERS = {
     wind:     { label: 'Wind', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.speed, fmt: (v) => fmtW(v) },
     gusts:    { label: 'Gusts', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.gust, fmt: (v) => fmtW(v) },
     temp:     { label: 'Temperature', stops: WX_TEMP, lo: -20, hi: 48, a: () => 0.58, val: (s) => s.temp, fmt: (v) => fmtT(v) },
-    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, a: (v) => (v < 0.1 ? 0 : Math.min(0.9, 0.5 + v / 3)), val: (s) => s.rain, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/h' },
+    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, even: true, a: (v) => (v < 0.1 ? 0 : Math.min(0.94, 0.55 + v / 4)), val: (s) => s.rain, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/h' },
     cloud:    { label: 'Clouds', stops: [[0, [255, 255, 255]], [100, [255, 255, 255]]], legend: [[0, [40, 52, 62]], [100, [255, 255, 255]]], lo: 0, hi: 100, a: (v) => 0.75 * Math.pow(v / 100, 1.3), val: (s) => s.cloud, fmt: (v) => Math.round(v) + '%' },
     pressure: { label: 'Pressure', stops: PRESS_STOPS, lo: 980, hi: 1040, a: () => 0.5, val: (s) => s.pres, fmt: (v) => Math.round(v) + ' hPa' },
     humidity: { label: 'Humidity', stops: HUM_STOPS, lo: 0, hi: 100, a: () => 0.5, val: (s) => s.hum, fmt: (v) => Math.round(v) + '%' },
@@ -373,7 +373,7 @@ const WM = (function () {
   function drawLegend() {
     const Ly = LAYERS[state.layer] || LAYERS.wind, span = Ly.hi - Ly.lo;
     $('#lg-bar').style.background = 'linear-gradient(90deg,' +
-      (Ly.legend || Ly.stops).map(([v, c]) => `rgb(${c.join(',')}) ${Math.max(0, Math.min(100, ((v - Ly.lo) / span) * 100)).toFixed(0)}%`).join(',') + ')';
+      (Ly.legend || Ly.stops).map(([v, c], i, arr) => `rgb(${c.join(',')}) ${(Ly.even ? (i / (arr.length - 1)) * 100 : Math.max(0, Math.min(100, ((v - Ly.lo) / span) * 100))).toFixed(0)}%`).join(',') + ')';
     $('#lg-min').textContent = Ly.fmt(Ly.lo); $('#lg-max').textContent = Ly.fmt(Ly.hi);
     $('#lg-name').textContent = Ly.label;
   }
