@@ -68,7 +68,7 @@ function setBase(dark) {
     return;
   }
   const kind = dark ? 'World_Dark_Gray' : 'World_Light_Gray';
-  baseLayer = L.tileLayer(`${ESRI}${kind}_Base/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 18, maxNativeZoom: 16, attribution: ESRI_ATTR }).addTo(map);
+  baseLayer = L.tileLayer(`${ESRI}${kind}_Base/MapServer/tile/{z}/{y}/{x}`, { minZoom: 7, maxZoom: 18, maxNativeZoom: 16, attribution: ESRI_ATTR }).addTo(map);   // zoomed out: clean flat background + our own outlines and English names
   labelLayer = L.tileLayer(`${ESRI}${kind}_Reference/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 18, maxNativeZoom: 16, minZoom: 9, pane: 'labels' }).addTo(map);
   baseLayer.on('tileerror', () => {
     if (++tileErrors === 6) { osmFallback = true; setBase(document.body.classList.contains('dark-map')); }
