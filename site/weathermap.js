@@ -56,7 +56,7 @@ const WXCORE = {
 /* WXCORE-END */
 
 const WM = (function () {
-  const ROWS = 7, COLS = 9, CELL = 8, K = 0.07;
+  const ROWS = 7, COLS = 9, CELL = 8, K = 0.11;
   let WCELL = 14;
   const VARS = 'temperature_2m,relative_humidity_2m,precipitation,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m';
   const HUM_STOPS = [[0, [230, 200, 140]], [40, [200, 225, 150]], [70, [90, 200, 190]], [100, [60, 110, 230]]];
@@ -346,23 +346,26 @@ const WM = (function () {
     px[i] = Math.random() * W; py[i] = Math.random() * H;
     age[i] = scatter ? Math.random() * 70 : 0;
   }
-  function frame() {
+  let lastT = 0;
+  function frame(ts) {
     requestAnimationFrame(frame);
+    const dt = Math.max(0.5, Math.min(3, ((ts || 0) - lastT) / 16.67)); lastT = ts || 0;   // same speed on 60 Hz and 120 Hz screens
     const on = !reduced && !moving && U && particlesOn && !EXTRA[state.layer] && !document.hidden;
     if (!on) return;
     const dark = document.body.classList.contains('dark-map');
     wctx.globalCompositeOperation = 'destination-out';
-    wctx.fillStyle = 'rgba(0,0,0,0.075)'; wctx.fillRect(0, 0, W, H);
+    wctx.fillStyle = 'rgba(0,0,0,' + (0.075 * dt).toFixed(3) + ')'; wctx.fillRect(0, 0, W, H);
     wctx.globalCompositeOperation = 'source-over';
     wctx.lineWidth = 1.2; wctx.lineCap = 'round';
     wctx.strokeStyle = dark ? 'rgba(255,255,255,0.78)' : 'rgba(8,28,44,0.7)';
     wctx.beginPath();
+    const spd = K * dt * Math.min(2.4, Math.max(0.8, Math.pow(2, (map.getZoom() - 6) * 0.3)));   // a little faster as you zoom in, like Windy
     for (let i = 0; i < N; i++) {
       const cx = (px[i] / WCELL) | 0, cy = (py[i] / WCELL) | 0;
-      if (cx < 0 || cy < 0 || cx >= wCols || cy >= wRows || ++age[i] > 70) { spawn(i, false); continue; }
+      if (cx < 0 || cy < 0 || cx >= wCols || cy >= wRows || (age[i] += dt) > 70) { spawn(i, false); continue; }
       const k = cy * wCols + cx, u = U[k], v = V[k];
       if (u !== u || v !== v) { spawn(i, false); continue; }
-      const nx = px[i] + u * K, ny = py[i] - v * K;
+      const nx = px[i] + u * spd, ny = py[i] - v * spd;
       wctx.moveTo(px[i], py[i]); wctx.lineTo(nx, ny);
       px[i] = nx; py[i] = ny;
     }
