@@ -110,13 +110,19 @@ async function setLocation(lat, lon, name, zoom, source) {
       '&hourly=temperature_2m,precipitation,precipitation_probability' +
       '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max' +
       '&forecast_days=16&timezone=auto&wind_speed_unit=kmh';
-    state.data = await getJSON(url);
+    for (let tryNo = 0; ; tryNo++) {   // the free weather service is sometimes busy: wait and try again
+      try { state.data = await getJSON(url); break; }
+      catch (err) { if (tryNo >= 2) throw err; showStatus('Weather service is busy, trying again…'); await new Promise((r) => setTimeout(r, 2000 * (tryNo + 1))); }
+    }
     state.name = await namePromise;
     showStatus('');
     render();
     loadSeasonal(lat, lon);
   } catch (e) {
-    showStatus('Could not load the forecast. Check your connection and tap the map to try again.', true);
+    const why = String((e && e.message) || '');
+    showStatus(/429/.test(why)
+      ? 'The free weather service has paused requests from your network for a while (too many requests). Please try again in a few minutes, or after 5:30 AM IST if it stays blocked.'
+      : 'Could not load the forecast (' + (why || 'no connection') + '). Check your connection and tap the map to try again.', true);
   }
 }
 
