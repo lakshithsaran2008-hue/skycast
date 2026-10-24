@@ -63,7 +63,7 @@ const WM = (function () {
   /* Windy-style palettes */
   const WX_WIND = [[0, [72, 98, 186]], [8, [62, 140, 205]], [18, [66, 184, 166]], [28, [140, 208, 90]], [40, [240, 214, 62]], [55, [242, 146, 52]], [72, [228, 68, 62]], [95, [176, 48, 150]]];
   const WX_TEMP = [[-20, [128, 62, 190]], [-10, [100, 112, 224]], [0, [70, 160, 240]], [10, [88, 208, 204]], [18, [138, 220, 104]], [25, [250, 230, 80]], [31, [250, 168, 58]], [38, [236, 82, 58]], [48, [160, 30, 62]]];
-  const WX_RAIN = [[0, [30, 82, 200]], [1.5, [38, 118, 238]], [2, [44, 164, 232]], [3, [66, 208, 108]], [7, [240, 228, 44]], [10, [250, 148, 36]], [20, [232, 46, 60]], [30, [208, 40, 190]]];
+  const WX_RAIN = [[0, [58, 110, 198]], [1.5, [52, 136, 228]], [2, [56, 172, 216]], [3, [84, 204, 118]], [7, [238, 228, 50]], [10, [248, 150, 40]], [20, [232, 48, 62]], [30, [208, 42, 188]]];
   const LAYERS = {
     wind:     { label: 'Wind', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.speed, fmt: (v) => fmtW(v) },
     gusts:    { label: 'Gusts', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.gust, fmt: (v) => fmtW(v) },
@@ -281,8 +281,11 @@ const WM = (function () {
   }
   function prepGfs() {
     const fh = Math.min(gfs.maxFh, Math.max(0, (baseNow + offset * 3600e3 - gfs.cycleMs) / 3600e3));
-    const si = fh / 3, s0 = Math.min(Math.floor(si), gfs.hours.length - 1), s1 = Math.min(s0 + 1, gfs.hours.length - 1);
-    tW = si - s0;
+    const hrs = gfs.hours;
+    let s0 = 0; while (s0 < hrs.length - 1 && hrs[s0 + 1] <= fh) s0++;
+    const s1 = Math.min(s0 + 1, hrs.length - 1);
+    tW = s1 === s0 ? 0 : (fh - hrs[s0]) / (hrs[s1] - hrs[s0]);
+    for (let k = 2; k <= 3; k++) if (s0 + k < hrs.length) loadStep(s0 + k);   // warm up the next steps while playing
     let A = stepCache[s0], B = stepCache[s1];
     if (!A || !B) { loadStep(s0); loadStep(s1); }
     if (!A && !B) { tA = tB = null; return false; }
@@ -519,7 +522,6 @@ const WM = (function () {
   function togglePlay() {
     const b = $('#tl-play');
     if (playTimer) { clearInterval(playTimer); playTimer = null; b.textContent = '▶'; b.setAttribute('aria-label', 'Play'); return; }
-    if (source === 'gfs') for (let i = 0; i < gfs.hours.length; i++) loadStep(i);
     b.textContent = '❚❚'; b.setAttribute('aria-label', 'Pause');
     playTimer = setInterval(() => setOffset(offset >= +$('#tl-range').max ? 0 : offset + 1), 650);
   }
