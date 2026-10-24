@@ -30,7 +30,8 @@ import numpy as np
 BUCKET = "https://noaa-gfs-bdp-pds.s3.amazonaws.com"
 SOUTH, NORTH, WEST, EAST = -2.0, 42.0, 50.0, 112.0
 STEP_DEG = 0.25
-HOURS = list(range(0, 97, 3))
+# every 3 h for the first 4 days, then every 6 h out to 16 days (the website blends between steps)
+HOURS = list(range(0, 97, 3)) + list(range(102, 385, 6))
 MISSING = -32768
 
 # name, GRIB variable, level, scale, offset, unit after conversion
