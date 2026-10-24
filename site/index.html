@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skycast – Live weather map and forecast</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#10222e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Interactive weather map with wind, temperature, rain, cloud and pressure layers and a 16-day forecast for any place.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="map" aria-label="Weather map"></div>
+
+<header class="topbar">
+  <div class="search">
+    <input id="q" type="search" placeholder="Search a city, town or village" autocomplete="off" aria-label="Search a place">
+    <ul id="results" hidden></ul>
+  </div>
+  <button id="open-forecast" class="text-btn">Forecast</button>
+  <button id="browse-btn" class="text-btn" aria-expanded="false" aria-controls="browse">India areas</button>
+  <button id="home-go" class="icon-btn" title="Go to my saved home" aria-label="Go to my saved home" hidden>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>
+  </button>
+  <button id="locate" class="icon-btn" title="Go to my location" aria-label="Go to my location">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+  </button>
+</header>
+
+<section id="browse" hidden aria-label="Browse India by area">
+  <div class="b-head"><b>Browse India</b><button id="b-close" class="b-x" aria-label="Close">×</button></div>
+  <label>State or UT<select id="b-state"><option value="">Select state</option></select></label>
+  <label>District<select id="b-district" disabled><option value="">Select district</option></select></label>
+  <label>Taluk<select id="b-taluk" disabled><option value="">Select taluk</option></select></label>
+  <label>Urban (town or city)<select id="b-urban" disabled><option value="">Select town or city</option></select></label>
+  <label>Sub-urban (ward)<select id="b-ward" disabled><option value="">Select ward</option></select></label>
+  <label>Village (rural)<select id="b-village" disabled><option value="">Select village</option></select></label>
+  <p class="b-note">Names come from the Local Government Directory. Positions are matched by name on OpenStreetMap, so a small ward or village may appear at the nearest larger centre. The panel says when that happens.</p>
+</section>
+
+<nav class="layers" id="layers" aria-label="Map layers">
+  <button data-layer="wind" class="on"><span>Wind</span><i style="background:conic-gradient(#3e8ccd,#42b8a6,#8cd05a,#f0d63e,#f29234,#e4443e,#3e8ccd)"></i></button>
+  <button data-layer="gusts"><span>Gusts</span><i style="background:radial-gradient(circle at 50% 50%,#f29234,#e4443e 55%,#b03096)"></i></button>
+  <button data-layer="temp"><span>Temperature</span><i style="background:linear-gradient(135deg,#4aa0f0,#8adc68 35%,#fae650 60%,#ec523a)"></i></button>
+  <button data-layer="rain"><span>Rain</span><i style="background:radial-gradient(circle at 40% 40%,#28c878,#46a0ff 55%,#2864d8)"></i></button>
+  <button data-layer="cloud"><span>Clouds</span><i style="background:radial-gradient(circle at 35% 35%,#fff,#aab6c4 60%,#6e7d8e)"></i></button>
+  <button data-layer="humidity"><span>Humidity</span><i style="background:linear-gradient(135deg,#e6c88c,#c8e196 40%,#5ac8be 70%,#3c6ee6)"></i></button>
+  <button data-layer="pressure"><span>Pressure</span><i style="background:linear-gradient(135deg,#8c64e6,#50aaff 35%,#78dcbe 60%,#fa7a3c)"></i></button>
+  <button data-layer="waves"><span>Waves</span><i style="background:linear-gradient(135deg,#4664c8,#3caadc 35%,#50d2aa 60%,#f0d246)"></i></button>
+  <button data-layer="aqi"><span>Air quality</span><i style="background:linear-gradient(135deg,#50c878,#fadc46 40%,#f58c32 65%,#8c2878)"></i></button>
+  <button id="map-style" class="style-toggle" aria-pressed="false"><span>Dark map</span><i style="background:linear-gradient(90deg,#1c2630 50%,#e8ecef 50%)"></i></button>
+</nav>
+
+<div id="legend" class="legend-bar" aria-label="Map legend">
+  <b id="lg-name">Wind</b>
+  <span id="lg-min"></span><div id="lg-bar"></div><span id="lg-max"></span>
+  <span id="src" class="src"></span>
+  <span id="probe" aria-live="off">Loading map data…</span>
+</div>
+<div id="timeline" class="timeline">
+  <button id="tl-play" class="tl-btn" aria-label="Play">▶</button>
+  <div class="tl-main">
+    <div id="tl-days" class="tl-days"></div>
+    <input id="tl-range" type="range" min="0" max="383" value="0" step="1" aria-label="Forecast time">
+  </div>
+  <div id="tl-label">…</div>
+</div>
+</div>
+
+<aside id="panel" class="closed" aria-live="polite">
+  <button id="panel-close" class="b-x panel-x" aria-label="Close forecast">×</button>
+  <button id="sheet-toggle" class="sheet-toggle" aria-label="Show or hide forecast"></button>
+  <div class="scroll">
+    <div id="status" class="status">Finding your location…</div>
+
+    <section id="now" hidden>
+      <div class="place" id="place"></div>
+      <div class="place-src" id="place-src"></div>
+      <button id="save-home" class="link-btn">Set as home</button>
+      <div class="now-row">
+        <div class="now-icon" id="now-icon"></div>
+        <div>
+          <div class="now-temp" id="now-temp"></div>
+          <div class="now-desc" id="now-desc"></div>
+        </div>
+      </div>
+      <dl class="stats" id="stats"></dl>
+
+      <div class="units">
+        <label>Temperature
+          <select id="u-temp"><option value="C">°C</option><option value="F">°F</option></select>
+        </label>
+        <label>Wind
+          <select id="u-wind"><option value="kmh">km/h</option><option value="ms">m/s</option><option value="kt">knots</option><option value="mph">mph</option></select>
+        </label>
+      </div>
+
+      <h2>Next 48 hours</h2>
+      <canvas id="chart" height="170"></canvas>
+      <div class="legend"><span class="dot t"></span>Temperature <span class="dot r"></span>Rain</div>
+
+      <h2>16-day forecast</h2>
+      <ul id="daily" class="daily"></ul>
+      <h2>3-month outlook</h2>
+      <div id="season" class="season"></div>
+      <p class="note">Forecast data: Open-Meteo (ECMWF SEAS5 for the outlook). Map: OpenStreetMap contributors, CARTO.</p>
+    </section>
+  </div>
+</aside>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+<script src="india.js"></script>
+<script src="weathermap.js"></script>
+<script>if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+</body>
+</html>
