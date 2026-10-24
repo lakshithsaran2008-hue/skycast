@@ -56,7 +56,7 @@ const WXCORE = {
 /* WXCORE-END */
 
 const WM = (function () {
-  const ROWS = 7, COLS = 9, CELL = 8, K = 0.055;
+  const ROWS = 7, COLS = 9, CELL = 8, K = 0.015;
   let WCELL = 14;
   const VARS = 'temperature_2m,relative_humidity_2m,precipitation,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m';
   const HUM_STOPS = [[0, [230, 200, 140]], [40, [200, 225, 150]], [70, [90, 200, 190]], [100, [60, 110, 230]]];
