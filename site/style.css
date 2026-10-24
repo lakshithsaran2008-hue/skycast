@@ -223,3 +223,19 @@ canvas#chart{width:100%;height:170px;display:block}
 body:not(.dark-map) .layers button,body:not(.dark-map) .layers .style-toggle{color:#10202c!important;text-shadow:0 0 3px #fff,0 0 6px #fff}
 body:not(.dark-map) .layers button span{text-shadow:0 0 3px #fff,0 0 6px #fff,0 1px 4px #fff}
 body:not(.dark-map) .layers button.on span{color:#06231f;text-shadow:none}
+
+/* ---- phones, round 2: search on its own row, safe areas, browser-bar aware heights ---- */
+@media (max-width:760px){
+  #map{height:100dvh}
+  .topbar{flex-wrap:wrap;top:calc(8px + env(safe-area-inset-top))}
+  .topbar .search{flex:1 1 100%;order:0}
+  .topbar .text-btn,.topbar .icon-btn{order:1;flex:1 1 0;min-width:0;height:40px;padding:0 6px;font-size:12.5px}
+  .topbar .icon-btn{flex:0 0 44px}
+  .topbar input{height:42px}
+  .layers{top:calc(108px + env(safe-area-inset-top));gap:6px}
+  .layers button i{width:28px;height:28px}
+  #browse{top:calc(108px + env(safe-area-inset-top));max-height:calc(100dvh - 124px - env(safe-area-inset-bottom))}
+  .legend-bar{bottom:calc(100px + env(safe-area-inset-bottom))!important}
+  .timeline{bottom:calc(10px + env(safe-area-inset-bottom))!important}
+  #panel{max-height:calc(62dvh - env(safe-area-inset-bottom));padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+}
