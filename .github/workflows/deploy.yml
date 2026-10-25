@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   schedule:
+    # NOAA publishes a new GFS run every 6 hours; these times are about 5 hours after each run
     - cron: "50 4,10,16,22 * * *"
   workflow_dispatch:
 
@@ -33,7 +34,12 @@ jobs:
       - name: Self test
         run: python pipeline/selftest.py
 
-      - name: Fetch weather data
+      - name: Fetch ECMWF weather data (same model as Windy)
+        # If ECMWF is unreachable the site falls back to NOAA GFS, then to Open-Meteo.
+        continue-on-error: true
+        run: python pipeline/fetch_ecmwf.py --out site/data/ecmwf
+
+      - name: Fetch NOAA GFS weather data (backup)
         continue-on-error: true
         run: python pipeline/fetch_gfs.py --out site/data/gfs
 
