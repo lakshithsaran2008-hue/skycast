@@ -68,7 +68,7 @@ const WM = (function () {
     wind:     { label: 'Wind', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.speed, fmt: (v) => fmtW(v) },
     gusts:    { label: 'Gusts', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.gust, fmt: (v) => fmtW(v) },
     temp:     { label: 'Temperature', stops: WX_TEMP, lo: -20, hi: 48, a: () => 0.58, val: (s) => s.temp, fmt: (v) => fmtT(v) },
-    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, even: true, a: (v) => (v < 0.05 ? 0 : Math.min(0.95, 0.3 + v * 0.75)), val: (s) => s.rain * 3, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/3h' },
+    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, even: true, a: (v) => (v < 0.2 ? 0 : Math.min(0.82, 0.22 + v * 0.45)), val: (s) => s.rain * 3, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/3h' },
     cloud:    { label: 'Clouds', stops: [[0, [255, 255, 255]], [100, [255, 255, 255]]], legend: [[0, [40, 52, 62]], [100, [255, 255, 255]]], lo: 0, hi: 100, a: (v) => 0.75 * Math.pow(v / 100, 1.3), val: (s) => s.cloud, fmt: (v) => Math.round(v) + '%' },
     pressure: { label: 'Pressure', stops: PRESS_STOPS, lo: 980, hi: 1040, a: () => 0.5, val: (s) => s.pres, fmt: (v) => Math.round(v) + ' hPa' },
     humidity: { label: 'Humidity', stops: HUM_STOPS, lo: 0, hi: 100, a: () => 0.5, val: (s) => s.hum, fmt: (v) => Math.round(v) + '%' },
@@ -254,22 +254,26 @@ const WM = (function () {
   /* ---------- GFS files (written hourly by the pipeline) ---------- */
   async function loadGfs() {
     if (typeof DecompressionStream === 'undefined') return;
-    try {
-      const r = await fetch('data/gfs/manifest.json', { cache: 'no-cache' });
-      if (!r.ok) return;
-      const m = await r.json(), cycleMs = Date.parse(m.cycleTime), maxFh = m.hours[m.hours.length - 1];
-      if (!(cycleMs > 0) || (Date.now() - cycleMs) / 3600e3 > 60) return;      // missing or stale: use Open-Meteo instead
-      gfs = {
-        g: { rows: m.rows, cols: m.cols, south: m.south, north: m.north, west: m.west, east: m.east, dLat: m.dlat, dLon: m.dlon, sc: m.vars.map((v) => v.scale), off: m.vars.map((v) => v.offset) },
-        cycleMs, maxFh, hours: m.hours, ver: m.cycle,
-      };
-    } catch (e) { gfs = null; }
+    for (const dir of ['ecmwf', 'gfs']) {          // ECMWF (what Windy shows) first, NOAA GFS as the backup
+      try {
+        const r = await fetch(`data/${dir}/manifest.json`, { cache: 'no-cache' });
+        if (!r.ok) continue;
+        const m = await r.json(), cycleMs = Date.parse(m.cycleTime), maxFh = m.hours[m.hours.length - 1];
+        if (!(cycleMs > 0) || (Date.now() - cycleMs) / 3600e3 > (dir === 'ecmwf' ? 72 : 60)) continue;      // missing or stale
+        gfs = {
+          g: { rows: m.rows, cols: m.cols, south: m.south, north: m.north, west: m.west, east: m.east, dLat: m.dlat, dLon: m.dlon, sc: m.vars.map((v) => v.scale), off: m.vars.map((v) => v.offset) },
+          cycleMs, maxFh, hours: m.hours, ver: m.cycle, dir, name: dir === 'ecmwf' ? 'ECMWF' : 'GFS',
+        };
+        return;
+      } catch (e) { /* try the next one */ }
+    }
+    gfs = null;
   }
   function loadStep(si) {
     if (stepCache[si] || pending[si]) return pending[si];
     const hh = String(gfs.hours[si]).padStart(3, '0');
     pending[si] = (async () => {
-      const res = await fetch(`data/gfs/f${hh}.bin.gz?v=${gfs.ver}`);
+      const res = await fetch(`data/${gfs.dir}/f${hh}.bin.gz?v=${gfs.ver}`);
       if (!res.ok) throw new Error('step');
       let buf = new Uint8Array(await res.arrayBuffer());
       if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
@@ -302,7 +306,7 @@ const WM = (function () {
     if (source === 'gfs') {
       range.max = gfsMaxOffset(); if (offset > +range.max) offset = 0; range.value = offset;
       const d = new Date(gfs.cycleMs);
-      $('#src').textContent = `GFS 25 km · run ${String(d.getUTCHours()).padStart(2, '0')}Z`;
+      $('#src').textContent = `${gfs.name} 25 km · run ${String(d.getUTCHours()).padStart(2, '0')}Z`;
     } else {
       $('#src').textContent = 'Open-Meteo';
       if (!field || !fieldBounds.contains(map.getBounds())) fetchField(); else { range.max = Math.max(0, Math.min(383, field.times.length - h0 - 1)); }
