@@ -191,7 +191,7 @@ def main():
         total += G.write_step(a.out, fh, G.finish(f, grid))
     man = write_manifest(a.out, cycle, grid[0], grid[1], origin[0], origin[1])
     try:
-        os.rmdir(work)
+        os.rmdir(work) 
     except OSError:
         pass
     print("Done:", man["rows"], "x", man["cols"], "grid,", round(total / 1e6, 1), "MB")
