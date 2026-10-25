@@ -438,8 +438,8 @@ const WM = (function () {
       }
       gctx.strokeStyle = style; gctx.lineWidth = width; gctx.lineJoin = 'round'; gctx.stroke();
     };
-    pass(geo.w, dark ? 'rgba(255,255,255,0.62)' : 'rgba(16,32,44,0.6)', z < 6 ? 1 : 1.4);
-    pass(geo.i, dark ? 'rgba(255,255,255,0.5)' : 'rgba(16,32,44,0.5)', z < 6 ? 0.9 : 1.3);
+    pass(geo.w, dark ? 'rgba(6,10,14,0.72)' : 'rgba(16,32,44,0.6)', z < 6 ? 1 : 1.4);
+    pass(geo.i, dark ? 'rgba(6,10,14,0.55)' : 'rgba(16,32,44,0.5)', z < 6 ? 0.9 : 1.3);
   }
 
     /* ---------- day bar above the slider (click a day to jump there) ---------- */
