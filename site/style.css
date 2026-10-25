@@ -241,5 +241,8 @@ body:not(.dark-map) .layers button.on span{color:#06231f;text-shadow:none}
 }
 
 /* zoomed-out background (no map tiles below zoom 7) */
-body.dark-map #map{background:#2a2e33}
+body.dark-map #map{background:#474c51}
 body:not(.dark-map) #map{background:#e3e7ea}
+
+/* Windy-like mid-grey dark map */
+body.dark-map .base-tiles{filter:brightness(2.3) contrast(.82)}
