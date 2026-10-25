@@ -115,7 +115,7 @@ canvas#chart{width:100%;height:170px;display:block}
 
 /* weather canvases, legend and timeline */
 .wx-canvas{position:absolute;left:0;top:0;pointer-events:none}
-.wx-heat{filter:blur(8px)}
+.wx-heat{filter:blur(1.2px)}
 .legend-bar,.timeline{position:fixed;z-index:900;left:72px;right:396px;background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;align-items:center;gap:10px}
 .legend-bar{bottom:76px;padding:8px 14px;font-size:13px;color:var(--muted)}
 .legend-bar b{color:var(--text);min-width:78px}
