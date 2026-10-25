@@ -324,7 +324,7 @@ const WM = (function () {
     hctx.clearRect(0, 0, W, H);
     if (source === 'om' && !field) return;
     if (source === 'gfs' && !tA) return;
-    const CL = source === 'gfs' ? 6 : CELL, Ly = LAYERS[state.layer] || LAYERS.wind, g = lonLatGrid(CL);
+    const CL = source === 'gfs' ? (W * H > 1.2e6 ? 4 : 3) : 5, Ly = LAYERS[state.layer] || LAYERS.wind, g = lonLatGrid(CL);
     for (let r = 0; r < g.rows; r++) for (let c = 0; c < g.cols; c++) {
       const s = sampleAt(g.lats[r], g.lons[c]); if (!s) continue;
       const v = Ly.val(s); if (!(v === v)) continue;
