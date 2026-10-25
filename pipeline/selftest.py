@@ -60,5 +60,5 @@ assert abs(cv["u10"][0] - 36) < 1e-9 and abs(cv["cloud"][0] - 50) < 1e-9 and abs
 tp = {0: np.array([0.0]), 3: np.array([0.003]), 6: np.array([0.006]), 9: np.array([0.0066])}
 r = e2.rain_rates(tp)
 assert r[0][0] == 0 and abs(r[3][0] - 1.0) < 1e-9 and abs(r[9][0] - 0.2) < 1e-9, r   # mm/h averaged over each step
-assert e2.HOURS[0] == 0 and e2.HOURS[-1] == 360 and len(e2.HOURS) == 85
+assert e2.HOURS[0] == 0 and e2.HOURS[-1] == 240 and len(e2.HOURS) == 65
 print("ECMWF helper tests OK")
