@@ -61,10 +61,12 @@ def find_cycle():
     cyc = now.replace(hour=now.hour - now.hour % 12)
     for _ in range(6):
         for src in SOURCES:
+            u = file_url(src, cyc, HOURS[-1]) + ".index"
             try:
-                G.http_get(file_url(src, cyc, HOURS[-1]) + ".index", tries=1)
+                G.http_get(u, tries=1)
                 return cyc, src
-            except Exception:
+            except Exception as e:
+                print("  not usable:", u, "->", type(e).__name__, e, flush=True)
                 continue
         cyc -= dt.timedelta(hours=12)
     raise SystemExit("No complete ECMWF cycle found in the last 3 days")
@@ -191,7 +193,7 @@ def main():
         total += G.write_step(a.out, fh, G.finish(f, grid))
     man = write_manifest(a.out, cycle, grid[0], grid[1], origin[0], origin[1])
     try:
-        os.rmdir(work) 
+        os.rmdir(work)
     except OSError:
         pass
     print("Done:", man["rows"], "x", man["cols"], "grid,", round(total / 1e6, 1), "MB")
