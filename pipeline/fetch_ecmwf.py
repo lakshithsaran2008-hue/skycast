@@ -57,17 +57,21 @@ def choose(entries, param):
 
 
 def find_cycle():
+    """Newest 00z/12z run whose forecast files exist. Tries the longest range first
+    (240 h) and falls back to shorter ranges, then trims HOURS to what exists."""
     now = dt.datetime.now(dt.timezone.utc).replace(minute=0, second=0, microsecond=0)
     cyc = now.replace(hour=now.hour - now.hour % 12)
     for _ in range(6):
-        for src in SOURCES:
-            u = file_url(src, cyc, HOURS[-1]) + ".index"
-            try:
-                G.http_get(u, tries=1)
+        for src in SOURCES[:2]:
+            for last in (240, 144, 90, 48, 24):
+                u = file_url(src, cyc, last) + ".index"
+                try:
+                    G.http_get(u, tries=1)
+                except Exception as e:
+                    print("  not usable:", u, "->", type(e).__name__, e, flush=True)
+                    continue
+                HOURS[:] = [h for h in HOURS if h <= last]
                 return cyc, src
-            except Exception as e:
-                print("  not usable:", u, "->", type(e).__name__, e, flush=True)
-                continue
         cyc -= dt.timedelta(hours=12)
     raise SystemExit("No complete ECMWF cycle found in the last 3 days")
 
