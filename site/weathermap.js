@@ -51,6 +51,19 @@ const WXCORE = {
     const u = o[0], v = o[1], speed = Math.hypot(u, v);
     return { u, v, speed, gust: o[2] === o[2] ? o[2] : speed, temp: o[3], hum: o[4], cloud: o[5], pres: o[6], rain: o[7] === o[7] ? Math.max(0, o[7]) : 0 };
   },
+  gfsValue(g, lat, lon, A, B, w, k) {
+    const fy = (lat - g.south) / g.dLat, fx = (lon - g.west) / g.dLon;
+    if (!(fy >= 0 && fx >= 0 && fy <= g.rows - 1 && fx <= g.cols - 1)) return null;
+    const i = Math.min(g.rows - 2, Math.floor(fy)), j = Math.min(g.cols - 2, Math.floor(fx));
+    const ty = fy - i, tx = fx - j, n = g.rows * g.cols, C = g.cols, o = k * n + i * C + j, M = -32768;
+    const bil = (arr) => {
+      const a = arr[o], b = arr[o + 1], c = arr[o + C], d = arr[o + C + 1];
+      if (a === M || b === M || c === M || d === M) return NaN;
+      return (1 - ty) * ((1 - tx) * a + tx * b) + ty * ((1 - tx) * c + tx * d);
+    };
+    const v0 = bil(A), v1 = B === A ? v0 : bil(B);
+    return (v0 + (v1 - v0) * w) / g.sc[k] + g.off[k];
+  },
   dirFrom(u, v) { return (Math.atan2(-u, -v) * 180 / Math.PI + 360) % 360; },
 };
 /* WXCORE-END */
@@ -324,10 +337,11 @@ const WM = (function () {
     hctx.clearRect(0, 0, W, H);
     if (source === 'om' && !field) return;
     if (source === 'gfs' && !tA) return;
-    const CL = source === 'gfs' ? (W * H > 1.2e6 ? 4 : 3) : 5, Ly = LAYERS[state.layer] || LAYERS.wind, g = lonLatGrid(CL);
+    const fastRain = source === 'gfs' && state.layer === 'rain' && tA, CL = source === 'gfs' ? (fastRain ? 2 : 3) : 4, Ly = LAYERS[state.layer] || LAYERS.wind, g = lonLatGrid(CL);
     for (let r = 0; r < g.rows; r++) for (let c = 0; c < g.cols; c++) {
-      const s = sampleAt(g.lats[r], g.lons[c]); if (!s) continue;
-      const v = Ly.val(s); if (!(v === v)) continue;
+      let v;
+      if (fastRain) { const q = WXCORE.gfsValue(gfs.g, g.lats[r], g.lons[c], tA, tB, tW, 7); if (q === null || !(q === q)) continue; v = Math.max(0, q) * 3; }
+      else { const s = sampleAt(g.lats[r], g.lons[c]); if (!s) continue; v = Ly.val(s); if (!(v === v)) continue; }
       const a = Ly.a(v); if (a <= 0) continue;
       hctx.globalAlpha = a; hctx.fillStyle = ramp(v, Ly.stops);
       hctx.fillRect(c * CL, r * CL, CL + 0.5, CL + 0.5);
