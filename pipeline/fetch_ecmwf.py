@@ -25,8 +25,8 @@ SOURCES = [
     "https://data.ecmwf.int/forecasts",
     "https://ai4edataeuwest.blob.core.windows.net/ecmwf",
 ]
-# 00z and 12z runs: every 3 h to day 6, then every 6 h to day 15
-HOURS = list(range(0, 145, 3)) + list(range(150, 361, 6))
+# 00z and 12z runs: every 3 h to day 6, then every 6 h to day 10 (the free HRES run ends at 240 h)
+HOURS = list(range(0, 145, 3)) + list(range(150, 241, 6))
 # website variable -> ECMWF parameter, in download order
 PARAMS = [("u10", "10u"), ("v10", "10v"), ("gust", "10fg"), ("t2m", "2t"), ("d2m", "2d"),
           ("cloud", "tcc"), ("pres", "msl"), ("tp", "tp")]
