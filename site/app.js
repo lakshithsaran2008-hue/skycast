@@ -7,7 +7,7 @@ function getHome() { try { const h = JSON.parse(localStorage.getItem('sc_home'))
 function fallbackPlace() { const h = getHome(); return h ? { lat: h.lat, lon: h.lon, name: h.name, src: 'Your saved home' } : { lat: FALLBACK.lat, lon: FALLBACK.lon, name: FALLBACK.name, src: 'Default location' }; }
 
 const $ = (s) => document.querySelector(s);
-const state = { lat: null, lon: null, name: '', layer: 'wind', tempUnit: 'C', windUnit: 'kmh', data: null };
+const state = { lat: null, lon: null, name: '', layer: 'rain', tempUnit: 'C', windUnit: 'kmh', data: null };
 let map, pin, searchTimer;
 
 /* ---------- helpers ---------- */
