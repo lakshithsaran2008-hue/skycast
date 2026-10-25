@@ -56,7 +56,7 @@ const WXCORE = {
 /* WXCORE-END */
 
 const WM = (function () {
-  const ROWS = 7, COLS = 9, CELL = 8, K = 0.025;
+  const ROWS = 7, COLS = 9, CELL = 8, K = 0.020;
   let WCELL = 14;
   const VARS = 'temperature_2m,relative_humidity_2m,precipitation,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m';
   const HUM_STOPS = [[0, [230, 200, 140]], [40, [200, 225, 150]], [70, [90, 200, 190]], [100, [60, 110, 230]]];
@@ -68,7 +68,7 @@ const WM = (function () {
     wind:     { label: 'Wind', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.speed, fmt: (v) => fmtW(v) },
     gusts:    { label: 'Gusts', stops: WX_WIND, lo: 0, hi: 95, a: () => 0.5, val: (s) => s.gust, fmt: (v) => fmtW(v) },
     temp:     { label: 'Temperature', stops: WX_TEMP, lo: -20, hi: 48, a: () => 0.58, val: (s) => s.temp, fmt: (v) => fmtT(v) },
-    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, even: true, a: (v) => (v < 0.2 ? 0 : Math.min(0.7, 0.14 + 0.18 * Math.log2(1 + 1.5 * v))), val: (s) => s.rain * 3, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/3h' },
+    rain:     { label: 'Rain, thunder', stops: WX_RAIN, lo: 0, hi: 30, even: true, a: (v) => (v < 0.2 ? 0 : Math.min(0.55, 0.12 + 0.13 * Math.log2(1 + 1.5 * v))), val: (s) => s.rain * 3, fmt: (v) => (v >= 30 ? '30+' : v.toFixed(1)) + ' mm/3h' },
     cloud:    { label: 'Clouds', stops: [[0, [255, 255, 255]], [100, [255, 255, 255]]], legend: [[0, [40, 52, 62]], [100, [255, 255, 255]]], lo: 0, hi: 100, a: (v) => 0.75 * Math.pow(v / 100, 1.3), val: (s) => s.cloud, fmt: (v) => Math.round(v) + '%' },
     pressure: { label: 'Pressure', stops: PRESS_STOPS, lo: 980, hi: 1040, a: () => 0.5, val: (s) => s.pres, fmt: (v) => Math.round(v) + ' hPa' },
     humidity: { label: 'Humidity', stops: HUM_STOPS, lo: 0, hi: 100, a: () => 0.5, val: (s) => s.hum, fmt: (v) => Math.round(v) + '%' },
