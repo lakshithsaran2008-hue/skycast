@@ -46,3 +46,19 @@ blob = b"".join(g.encode(n, fin[n], sc, off).tobytes() for n, _v, _l, sc, off, _
 back = g.unpack(g.pack(blob))
 assert back.tobytes() == blob
 print("pipeline self test OK; grid", len(rows), "x", len(cols))
+
+# ---- ECMWF helpers
+import fetch_ecmwf as e2
+idx = '{"param": "2t", "levtype": "sfc", "_offset": 0, "_length": 100}\n{"param": "msl", "levtype": "sfc", "_offset": 100, "_length": 50}\n'
+ents = e2.parse_index(idx)
+assert e2.choose(ents, "msl")["_offset"] == 100 and e2.choose(ents, "tp") is None
+assert abs(float(e2.rh_from_dewpoint(np.array(20.0), np.array(20.0))) - 100) < 1e-6
+assert 40 < float(e2.rh_from_dewpoint(np.array(30.0), np.array(17.0))) < 50
+cv = e2.convert({"u10": np.array([10.0]), "v10": np.array([0.0]), "t2m": np.array([300.0]), "d2m": np.array([290.0]),
+                 "cloud": np.array([0.5]), "pres": np.array([101300.0])})
+assert abs(cv["u10"][0] - 36) < 1e-9 and abs(cv["cloud"][0] - 50) < 1e-9 and abs(cv["pres"][0] - 1013) < 1e-9
+tp = {0: np.array([0.0]), 3: np.array([0.003]), 6: np.array([0.006]), 9: np.array([0.0066])}
+r = e2.rain_rates(tp)
+assert r[0][0] == 0 and abs(r[3][0] - 1.0) < 1e-9 and abs(r[9][0] - 0.2) < 1e-9, r   # mm/h averaged over each step
+assert e2.HOURS[0] == 0 and e2.HOURS[-1] == 360 and len(e2.HOURS) == 85
+print("ECMWF helper tests OK")
