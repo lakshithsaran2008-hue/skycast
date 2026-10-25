@@ -26,7 +26,7 @@ SOURCES = [
     "https://ai4edataeuwest.blob.core.windows.net/ecmwf",
 ]
 # 00z and 12z runs: every 3 h to day 6, then every 6 h to day 10 (the free HRES run ends at 240 h)
-HOURS = list(range(0, 145, 3)) + list(range(150, 241, 6))
+HOURS = list(range(0, 145, 3)) + list(range(150, 361, 6))
 # website variable -> ECMWF parameter, in download order
 PARAMS = [("u10", "10u"), ("v10", "10v"), ("gust", "10fg"), ("t2m", "2t"), ("d2m", "2d"),
           ("cloud", "tcc"), ("pres", "msl"), ("tp", "tp")]
@@ -35,6 +35,10 @@ PARAMS = [("u10", "10u"), ("v10", "10v"), ("gust", "10fg"), ("t2m", "2t"), ("d2m
 def file_url(src, cycle, fh):
     ymd, hh = cycle.strftime("%Y%m%d"), cycle.strftime("%H")
     return f"{src}/{ymd}/{hh}z/ifs/0p25/oper/{ymd}{hh}0000-{fh}h-oper-fc.grib2"
+
+
+def index_url(src, cycle, fh):
+    return file_url(src, cycle, fh)[:-len(".grib2")] + ".index"
 
 
 def parse_index(text):
@@ -63,8 +67,8 @@ def find_cycle():
     cyc = now.replace(hour=now.hour - now.hour % 12)
     for _ in range(6):
         for src in SOURCES[:2]:
-            for last in (240, 144, 90, 48, 24):
-                u = file_url(src, cyc, last) + ".index"
+            for last in (360, 240, 144, 90, 48, 24):
+                u = index_url(src, cyc, last)
                 try:
                     G.http_get(u, tries=1)
                 except Exception as e:
@@ -84,7 +88,7 @@ def rh_from_dewpoint(t_c, td_c):
 def fetch_step(cycle, src, fh, workdir):
     import pygrib
     url = file_url(src, cycle, fh)
-    entries = parse_index(G.http_get(url + ".index").decode())
+    entries = parse_index(G.http_get(index_url(src, cycle, fh)).decode())
     chosen = []
     for k, (name, param) in enumerate(PARAMS):
         d = choose(entries, param)
